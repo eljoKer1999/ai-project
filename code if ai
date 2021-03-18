@@ -1,0 +1,182 @@
+from collections import defaultdict
+import heapq as pq
+
+
+class Graph:
+    OO = 1000000009
+    lst = [4, 3, 2, 2, 1, 1]
+    num = 6
+
+    quantity = 4
+    possible_solution = []
+    match = set()
+    finalmatch = []
+    graph = defaultdict(list)
+    graph = {
+
+        0: [[1, 5], [2, 6], [3, 2], [4, 4], [5, 5], [6, 6]],
+        1: [[0, 5], [2, 3], [3, 4], [4, 10], [5, 12], [6, 6]],
+        2: [[0, 6], [1, 3], [3, 5], [4, 4], [5, 2], [6, 1]],
+        3: [[0, 2], [1, 4], [2, 4], [4, 7], [5, 8], [6, 9]],
+        4: [[3, 5], [6, 5], [0, 4], [1, 10], [2, 4], [5, 7]],
+        5: [[6, 6], [4, 7], [3, 8], [2, 2], [1, 12], [0, 5]],
+        6: [[5, 6], [4, 5], [3, 9], [2, 1], [1, 6], [0, 6]]
+    }
+    graph1 = {
+
+        0: [[1, 5], [2, 6], [3, 2], [4, 4], [5, 5], [6, 6]],
+        1: [[0, 5], [2, 3], [3, 4], [4, 10], [5, 12], [6, 6]],
+        2: [[0, 6], [1, 3], [3, 5], [4, 4], [5, 2], [6, 1]],
+        3: [[0, 2], [1, 4], [2, 4], [4, 7], [5, 8], [6, 9]],
+        4: [[0, 4], [1, 10], [2, 4],[3, 5] , [5, 7],[6, 5]],
+        5: [[0, 5],[1, 12],[2, 2],[3, 8],[4, 7],[6, 6] ],
+        6: [[0, 6],[1, 6],[2, 1],[3, 9],[4, 5],[5, 6]]
+    }
+    probailitylvl = []
+    vis = []
+    visno = []
+
+    allpaths = []
+
+    # noc number of customers
+
+    def __init__(self, noc, quan):
+        self.quantity = quan
+        self.num = noc
+        for i in range(100):
+            self.vis.append(False)
+        for i in range(100):
+            self.visno.append(0)
+
+    def getcustomerneeds(self, num):
+        for customer in range(num):
+            y = int(input())
+            self.customer_needs.append(y)
+
+    def addedge(self, vertix, edge, cost):
+        self.graph[vertix].append(list([edge, cost]))
+        self.graph[edge].append(list([vertix, cost]))
+
+    def probaility(self):
+
+        for vrtix in self.graph.values():
+            sumi = 0
+            for vrtixdata in vrtix:
+                sumi += 1 / vrtixdata[1]
+        self.probailitylvl.append(sumi)
+
+        for vrtix1 in self.graph.values():
+            lvl = 0
+            for vrtixdata1 in vrtix1:
+                vrtixdata1[1] = (1 / vrtixdata[1]) / next(iter(self.probailitylvl))
+                lvl += 1
+
+    def difference(self):
+        self.fin(6)
+        lasts = set()
+        for sts in self.match:
+            ky = True
+            for itm in sts:
+                if self.vis[itm] != True:
+                    self.vis[itm] = True
+                else:
+                    self.vis[itm] = False
+                    ky = False
+                    break
+            if ky == True:
+                lasts.add(sts)
+        for i in range(self.num):
+            self.vis[i] = False
+        for sts1 in lasts:
+            ko = False
+            for itm1 in sts1:
+                self.vis[itm1] = True
+        for i in range(self.num):
+            if self.vis[i] == False:
+                x = set()
+                x.add(i)
+                lasts.add(tuple(x))
+        for tp in lasts:
+            y = []
+            y.append(0)
+            for i in tp:
+                y.append((i + 1))
+            self.finalmatch.append(list(y))
+            y.clear()
+
+    def fin(self,num):
+        if num == 0:
+            if self.quantity == 0:
+                self.match.add(tuple(self.possible_solution))
+
+        else:
+            self.quantity = self.quantity - self.lst[num - 1]
+            self.possible_solution.append((num - 1))
+            self.fin(num - 1)
+            self.possible_solution.pop()
+            self.quantity = self.quantity + self.lst[num - 1]
+            self.fin(num - 1)
+
+    def shortestpath(self):
+
+        self.difference()
+        self.probaility()
+        par = []
+
+        minigraph = defaultdict(list)
+        for lists in self.finalmatch:
+            par.append(0)
+            for ele in lists:
+                # print(ele)
+                for k in self.graph[ele]:
+                    for i in lists:
+                        if k[0] == i:
+                            minigraph[ele].append(k)
+
+            def short(u):
+                self.visno[u] = 1
+                mx = -0x3f3f3f3f
+                no = 0
+                lst1 = []
+                lst2 = []
+                for v in minigraph[u]:
+                    for x in minigraph[u]:
+                        lst2.append(x[0])
+                        lst1.append(x[1])
+
+                    for i in range(len(lst2)):
+                        if mx < lst1[i] and not self.visno[lst2[i]]:
+                            mx = lst1[i]
+                            no = i
+                    if not self.visno[lst2[no]]:
+                        short(lst2[no])
+                        par.append(lst2[no])
+
+
+            short(0)
+            par.append(0)
+            par.reverse()
+            self.allpaths.append(list(par))
+            par.clear()
+            minigraph.clear()
+
+    def printGraph(self) :
+        self.shortestpath()
+        lastsolution=[]
+        qm=0
+        sumof=0
+        for lstf in self.allpaths:
+
+            qm+=1
+            for p in range(len(lstf)-1):
+                i=lstf[p]
+                j=lstf[p+1]-1
+                sumof=sumof+self.graph1[i][j][1]
+            print('V',qm,lstf,'cost-> ',sumof)
+            sumof=-1
+
+
+g = Graph(6, 4)
+g.printGraph()
+
+
